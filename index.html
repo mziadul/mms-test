@@ -62,41 +62,18 @@
   </table>
 
   <script>
-    // URL of the proxy API (relative path for GitHub Pages)
     const apiUrl = "https://gas-proxy-server-izui-guh7y9ml0-ziaduls-projects.vercel.app/api/gas-proxy?action=getUserList";
 
-    // Function to fetch data from the API and display it in a table
     async function fetchData() {
       try {
         document.getElementById('loading').style.display = 'block';
         const response = await fetch(apiUrl);
-        console.log(response);
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch data");
-        }
-        const html = await response.text();
-        const parser = new DOMParser();
-        const doc = parser.parseFromString(html, "text/html");
-        const userList = [];
-        const userItems = doc.querySelectorAll("ul li");
-        userItems.forEach(item => {
-          const user = {
-            id: item.textContent.split(",")[0].split(":")[1].trim(),
-            name: item.textContent.split(",")[1].split(":")[1].trim(),
-            email: item.textContent.split(",")[2].split(":")[1].trim(),
-            password: item.textContent.split(",")[3].split(":")[1].trim(),
-            type: item.textContent.split(",")[4].split(":")[1].trim(),
-            createdAt: item.textContent.split(",")[5].split(":")[1].trim(),
-            updatedAt: item.textContent.split(",")[6].split(":")[1].trim(),
-            updatedBy: item.textContent.split(",")[7].split(":")[1].trim()
-          };
-          userList.push(user);
-        });
+        const json = await response.json();
+        console.log('Fetched JSON:', json); // Log the raw data for debugging
         document.getElementById('loading').style.display = 'none';
         const userTableBody = document.getElementById('userTable').getElementsByTagName('tbody')[0];
         userTableBody.innerHTML = '';
-        userList.forEach(user => {
+        json.forEach(user => {
           const row = document.createElement('tr');
           row.innerHTML = `
             <td>${user.id}</td>
