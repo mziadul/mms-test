@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fetch User Data</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    h1 {
+      color: #333;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    table, th, td {
+      border: 1px solid #ddd;
+    }
+    th, td {
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    #loading {
+      font-size: 18px;
+      color: #555;
+    }
+  </style>
+  <link rel="icon" href="favicon.ico">
+</head>
+<body>
+  <h1>User List</h1>
+  <div id="loading">Loading...</div>
+  <table id="userTable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Password</th>
+        <th>Type</th>
+        <th>Created At</th>
+        <th>Updated At</th>
+        <th>Updated By</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- User data will be inserted here dynamically -->
+    </tbody>
+  </table>
+
+  <script>
+    // URL of the proxy API (relative path for GitHub Pages)
+    const apiUrl = "https://gas-proxy-server-izui-guh7y9ml0-ziaduls-projects.vercel.app/api/gas-proxy?action=getUserList";
+
+    // Function to fetch data from the API and display it in a table
+    async function fetchData() {
+      try {
+        document.getElementById('loading').style.display = 'block';
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error("Failed to fetch data");
+        }
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+        const userList = [];
+        const userItems = doc.querySelectorAll("ul li");
+        userItems.forEach(item => {
+          const user = {
+            id: item.textContent.split(",")[0].split(":")[1].trim(),
+            name: item.textContent.split(",")[1].split(":")[1].trim(),
+            email: item.textContent.split(",")[2].split(":")[1].trim(),
+            password: item.textContent.split(",")[3].split(":")[1].trim(),
+            type: item.textContent.split(",")[4].split(":")[1].trim(),
+            createdAt: item.textContent.split(",")[5].split(":")[1].trim(),
+            updatedAt: item.textContent.split(",")[6].split(":")[1].trim(),
+            updatedBy: item.textContent.split(",")[7].split(":")[1].trim()
+          };
+          userList.push(user);
+        });
+        document.getElementById('loading').style.display = 'none';
+        const userTableBody = document.getElementById('userTable').getElementsByTagName('tbody')[0];
+        userTableBody.innerHTML = '';
+        userList.forEach(user => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td>${user.id}</td>
+            <td>${user.name}</td>
+            <td>${user.email}</td>
+            <td>${user.password}</td>
+            <td>${user.type}</td>
+            <td>${user.createdAt}</td>
+            <td>${user.updatedAt}</td>
+            <td>${user.updatedBy}</td>
+          `;
+          userTableBody.appendChild(row);
+        });
+      } catch (error) {
+        console.error("Error fetching or parsing data:", error);
+        document.getElementById('loading').textContent = 'Failed to load data.';
+      }
+    }
+    fetchData();
+  </script>
+</body>
+</html>
