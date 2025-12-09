@@ -63,10 +63,12 @@
 
   <h2>Add New User</h2>
   <form id="userForm">
+    <label>ID: <input type="text" name="id" required></label>
     <label>Name: <input type="text" name="name" required></label>
     <label>Email: <input type="email" name="email" required></label>
     <label>Password: <input type="text" name="password" required></label>
     <label>Type: <input type="text" name="type" required></label>
+    <label>Updated By: <input type="text" name="updatedBy" required></label>
     <button type="submit">Add User</button>
   </form>
   <div id="formMessage"></div>
@@ -108,16 +110,19 @@
       e.preventDefault();
       const form = e.target;
       const user = {
+        id: form.id.value,
         name: form.name.value,
         email: form.email.value,
         password: form.password.value,
-        type: form.type.value
+        type: form.type.value,
+        updatedBy: form.updatedBy.value
       };
       try {
+        const params = new URLSearchParams(user).toString();
         const response = await fetch(apiPostUrl, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(user)
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params
         });
         const result = await response.json();
         if (response.ok) {
