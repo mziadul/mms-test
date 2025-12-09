@@ -61,8 +61,19 @@
     </tbody>
   </table>
 
+  <h2>Add New User</h2>
+  <form id="userForm">
+    <label>Name: <input type="text" name="name" required></label>
+    <label>Email: <input type="email" name="email" required></label>
+    <label>Password: <input type="text" name="password" required></label>
+    <label>Type: <input type="text" name="type" required></label>
+    <button type="submit">Add User</button>
+  </form>
+  <div id="formMessage"></div>
+
   <script>
     const apiUrl = "https://gas-proxy-server-izui-guh7y9ml0-ziaduls-projects.vercel.app/api/gas-proxy?action=getUserList";
+    const apiPostUrl = "https://gas-proxy-server-izui-guh7y9ml0-ziaduls-projects.vercel.app/api/gas-proxy?action=addUser";
 
     async function fetchData() {
       try {
@@ -92,6 +103,35 @@
         document.getElementById('loading').textContent = 'Failed to load data.';
       }
     }
+
+    document.getElementById('userForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const user = {
+        name: form.name.value,
+        email: form.email.value,
+        password: form.password.value,
+        type: form.type.value
+      };
+      try {
+        const response = await fetch(apiPostUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(user)
+        });
+        const result = await response.json();
+        if (response.ok) {
+          document.getElementById('formMessage').textContent = 'User added successfully!';
+          fetchData(); // Refresh table
+          form.reset();
+        } else {
+          document.getElementById('formMessage').textContent = result.error || 'Failed to add user.';
+        }
+      } catch (error) {
+        document.getElementById('formMessage').textContent = 'Error: ' + error.message;
+      }
+    });
+
     fetchData();
   </script>
 </body>
