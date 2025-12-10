@@ -61,27 +61,65 @@
     </tbody>
   </table>
 
-  <h2>Add New User</h2>
-  <form id="userForm">
-    <label>ID: <input type="text" name="id" required></label>
-    <label>Name: <input type="text" name="name" required></label>
-    <label>Email: <input type="email" name="email" required></label>
-    <label>Password: <input type="text" name="password" required></label>
-    <label>Type: <input type="text" name="type" required></label>
-    <label>Updated By: <input type="text" name="updatedBy" required></label>
-    <button type="submit">Add User</button>
-  </form>
-  <div id="formMessage"></div>
+
+  <div id="loginSection">
+    <h2>Login</h2>
+    <form id="loginForm">
+      <label>Email: <input type="email" name="email" required></label>
+      <label>Password: <input type="password" name="password" required></label>
+      <button type="submit">Login</button>
+    </form>
+    <div id="loginMessage"></div>
+  </div>
+
+  <div id="userSection" style="display:none;">
+    <h2>Add New User</h2>
+    <form id="userForm">
+      <label>ID: <input type="text" name="id" required></label>
+      <label>Name: <input type="text" name="name" required></label>
+      <label>Email: <input type="email" name="email" required></label>
+      <label>Password: <input type="text" name="password" required></label>
+      <label>Type: <input type="text" name="type" required></label>
+      <label>Updated By: <input type="text" name="updatedBy" required></label>
+      <button type="submit">Add User</button>
+    </form>
+    <div id="formMessage"></div>
+    <button id="logoutBtn">Logout</button>
+  </div>
 
   <script>
-    const apiUrl = "https://gas-proxy-server-izui-guh7y9ml0-ziaduls-projects.vercel.app/api/gas-proxy?action=getUserList";
-    const apiPostUrl = "https://gas-proxy-server-izui-guh7y9ml0-ziaduls-projects.vercel.app/api/gas-proxy?action=addUser";
+
+    const apiUrl = "https://gas-proxy-server-izui-aigv5d52q-ziaduls-projects.vercel.app/api/gas-proxy?action=getUserList";
+    const apiPostUrl = "https://gas-proxy-server-izui-aigv5d52q-ziaduls-projects.vercel.app/api/gas-proxy?action=addUser";
+    const apiLoginUrl = "https://gas-proxy-server-izui-aigv5d52q-ziaduls-projects.vercel.app/api/gas-proxy?action=login";
+
+    function showUserSection() {
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('userSection').style.display = 'block';
+    }
+    function showLoginSection() {
+      document.getElementById('loginSection').style.display = 'block';
+      document.getElementById('userSection').style.display = 'none';
+    }
+
+    // Check for token on load
+    if (localStorage.getItem('token')) {
+      showUserSection();
+    } else {
+      showLoginSection();
+    }
 
     async function fetchData() {
       try {
-        document.getElementById('loading').style.display = 'block';
-        const response = await fetch(apiUrl);
-        const json = await response.json();
+          document.getElementById('loading').style.display = 'block';
+          // Include token if available
+          const token = localStorage.getItem('token');
+          let url = apiUrl;
+          if (token) {
+            url += '&token=' + encodeURIComponent(token);
+          }
+          const response = await fetch(url);
+          const json = await response.json();
         console.log('Fetched JSON:', json); // Log the raw data for debugging
         document.getElementById('loading').style.display = 'none';
         const userTableBody = document.getElementById('userTable').getElementsByTagName('tbody')[0];
@@ -106,6 +144,7 @@
       }
     }
 
+
     document.getElementById('userForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const form = e.target;
@@ -115,7 +154,8 @@
         email: form.email.value,
         password: form.password.value,
         type: form.type.value,
-        updatedBy: form.updatedBy.value
+        updatedBy: form.updatedBy.value,
+        token: localStorage.getItem('token') || ''
       };
       try {
         const params = new URLSearchParams(user).toString();
@@ -135,6 +175,40 @@
       } catch (error) {
         document.getElementById('formMessage').textContent = 'Error: ' + error.message;
       }
+    });
+
+    // Login form handler
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const form = e.target;
+      const loginData = {
+        email: form.email.value,
+        password: form.password.value
+      };
+      try {
+        const params = new URLSearchParams(loginData).toString();
+        const response = await fetch(apiLoginUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: params
+        });
+        const result = await response.json();
+        if (result.token) {
+          localStorage.setItem('token', result.token);
+          document.getElementById('loginMessage').textContent = 'Login successful!';
+          showUserSection();
+        } else {
+          document.getElementById('loginMessage').textContent = result.error || 'Login failed.';
+        }
+      } catch (error) {
+        document.getElementById('loginMessage').textContent = 'Error: ' + error.message;
+      }
+    });
+
+    // Logout button
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+      localStorage.removeItem('token');
+      showLoginSection();
     });
 
     fetchData();
